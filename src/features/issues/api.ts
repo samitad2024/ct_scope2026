@@ -1,28 +1,27 @@
-import { Issue, User } from '../../types';
+import { Issue, ScopedIssuesResponse, ApiResponse } from '../../types/api';
 import * as issuesApi from '../../services/api/issues';
 
-const USE_MOCK = true;
-
-export const getIssues = async (user?: User | null): Promise<Issue[]> => {
-  if (USE_MOCK) {
-    return issuesApi.getIssues(user);
-  }
-  // return apiClient.get<Issue[]>('/issues');
-  return [];
+export const getIssues = async (params: { 
+  status?: string; 
+  category?: string; 
+  page?: number; 
+  limit?: number;
+} = {}): Promise<ScopedIssuesResponse> => {
+  return issuesApi.getIssues(params);
 };
 
-export const getIssueById = async (id: string): Promise<Issue | undefined> => {
-  if (USE_MOCK) {
-    return issuesApi.getIssueById(id);
-  }
-  // return apiClient.get<Issue>(`/issues/${id}`);
-  return undefined;
+export const getIssueById = async (id: string): Promise<ApiResponse<Issue>> => {
+  return issuesApi.getIssueById(id);
 };
 
-export const createIssue = async (issue: Omit<Issue, 'id' | 'createdAt' | 'updatedAt'>): Promise<Issue> => {
-  if (USE_MOCK) {
-    return issuesApi.createIssue(issue);
-  }
-  // return apiClient.post<Issue>('/issues', issue);
-  return {} as Issue;
+export const createIssue = async (formData: FormData): Promise<ApiResponse<Issue>> => {
+  return issuesApi.createIssue(formData);
+};
+
+export const assignIssue = async (issueId: string, technicianId: string): Promise<ApiResponse<Issue>> => {
+  return issuesApi.assignIssue(issueId, technicianId);
+};
+
+export const voteIssue = async (issueId: string): Promise<ApiResponse<{ votes: number }>> => {
+  return issuesApi.voteIssue(issueId);
 };

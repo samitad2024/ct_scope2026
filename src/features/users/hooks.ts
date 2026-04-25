@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUsers, getUserById, createUser, updateUser } from './api';
-import { User } from '../../types';
-import { useAuthStore } from '../../hooks/useAuth';
+import { User, CreateAdminRequest } from '../../types/api';
 
 export const useUsers = () => {
-  const { user } = useAuthStore();
   return useQuery({
-    queryKey: ['users', user?.id],
-    queryFn: () => getUsers(user),
+    queryKey: ['users'],
+    queryFn: getUsers,
+    select: (response) => response.data || [],
   });
 };
 
@@ -16,13 +15,14 @@ export const useUser = (id: string) => {
     queryKey: ['users', id],
     queryFn: () => getUserById(id),
     enabled: !!id,
+    select: (response) => response.data,
   });
 };
 
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: createUser,
+    mutationFn: (user: CreateAdminRequest) => createUser(user),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },

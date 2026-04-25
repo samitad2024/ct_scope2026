@@ -37,7 +37,7 @@ const navItems = [
 
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useUIStore();
-  const { user, role } = useAuthStore();
+  const { user } = useAuthStore();
 
   return (
     <>
@@ -76,7 +76,7 @@ export function Sidebar() {
 
       <ScrollArea className="h-[calc(100vh-4rem)] py-4">
         <nav className="space-y-2 px-2">
-          {navItems.filter(item => canAccessRoute(role, item.path)).map((item) => (
+          {navItems.filter(item => canAccessRoute(user?.role as any || null, item.path)).map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -97,10 +97,10 @@ export function Sidebar() {
         <div className="absolute bottom-0 left-0 w-full border-t bg-card p-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-              {user.name.charAt(0)}
+              {user.full_name.charAt(0)}
             </div>
             <div className="flex flex-col overflow-hidden">
-              <span className="text-sm font-semibold truncate">{user.name}</span>
+              <span className="text-sm font-semibold truncate">{user.full_name}</span>
               <span className="text-xs text-muted-foreground truncate">{user.role.replace('_', ' ')}</span>
             </div>
           </div>

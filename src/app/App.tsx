@@ -13,6 +13,7 @@ import AuditLogs from '../components/users/AuditLogs';
 import Settings from '../components/layout/Settings';
 import Notifications from '../features/notifications/components/Notifications';
 import Reports from '../components/shared/Reports';
+import LoginPage from '../components/auth/LoginPage';
 import { TooltipProvider } from '../components/ui/tooltip';
 import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes';
 import { ProtectedRoute } from '../components/shared/ProtectedRoute';
@@ -40,6 +41,7 @@ export default function App() {
         <TooltipProvider>
           <Router>
             <Routes>
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
                 <Route index element={<Dashboard />} />
                 <Route path="issues" element={<IssueList />} />

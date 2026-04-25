@@ -1,11 +1,10 @@
 import React from 'react';
 import { 
-  User, 
+  User as UserIcon, 
   Lock, 
   Bell, 
   Globe, 
   Database, 
-  Shield,
   Save,
   Camera
 } from 'lucide-react';
@@ -16,12 +15,11 @@ import { Label } from '../ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Switch } from '../ui/switch';
 import { Separator } from '../ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { useAuthStore } from '../../hooks/useAuth';
-import { UserRole } from '../../types';
 
 export default function Settings() {
-  const { user, loginAsRole } = useAuthStore();
+  const { user } = useAuthStore();
 
   if (!user) return null;
 
@@ -34,11 +32,10 @@ export default function Settings() {
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> Profile</TabsTrigger>
+          <TabsTrigger value="profile" className="gap-2"><UserIcon className="h-4 w-4" /> Profile</TabsTrigger>
           <TabsTrigger value="security" className="gap-2"><Lock className="h-4 w-4" /> Security</TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>
           <TabsTrigger value="system" className="gap-2"><Globe className="h-4 w-4" /> System</TabsTrigger>
-          <TabsTrigger value="rbac" className="gap-2"><Shield className="h-4 w-4" /> RBAC Demo</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -51,15 +48,17 @@ export default function Settings() {
               <div className="flex items-center gap-6">
                 <div className="relative">
                   <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
-                    <AvatarFallback className="text-2xl">{user.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="text-2xl">{user.full_name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <Button size="icon" variant="secondary" className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full shadow-md">
                     <Camera className="h-4 w-4" />
                   </Button>
                 </div>
                 <div className="space-y-1">
-                  <h3 className="font-semibold text-lg">{user.name}</h3>
-                  <p className="text-sm text-muted-foreground capitalize">{user.role.replace('_', ' ')} • {user.region}</p>
+                  <h3 className="font-semibold text-lg">{user.full_name}</h3>
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {user.role.replace('_', ' ')}
+                  </p>
                   <Button variant="outline" size="sm" className="mt-2">Change Avatar</Button>
                 </div>
               </div>
@@ -69,7 +68,7 @@ export default function Settings() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="fullName">Full Name</Label>
-                  <Input id="fullName" defaultValue={user.name} />
+                  <Input id="fullName" defaultValue={user.full_name} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
@@ -77,11 +76,11 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" defaultValue="+251 911 223344" />
+                  <Input id="phone" defaultValue={user.phone} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="region">Assigned Region</Label>
-                  <Input id="region" defaultValue={user.region} disabled />
+                  <Label htmlFor="role">Account Role</Label>
+                  <Input id="role" defaultValue={user.role} disabled />
                 </div>
               </div>
 
@@ -195,44 +194,6 @@ export default function Settings() {
 
               <div className="flex justify-end">
                 <Button className="gap-2"><Save className="h-4 w-4" /> Save System Settings</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="rbac" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>RBAC Demo Mode</CardTitle>
-              <CardDescription>Switch between roles to test the dashboard's access control features.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {(['federal_admin', 'regional_admin', 'zonal_admin', 'woreda_admin', 'technician'] as UserRole[]).map((role) => (
-                  <Button 
-                    key={role}
-                    variant={user.role === role ? "default" : "outline"}
-                    className="h-auto py-4 flex flex-col items-start gap-1"
-                    onClick={() => loginAsRole(role)}
-                  >
-                    <span className="font-bold capitalize">{role.replace('_', ' ')}</span>
-                    <span className="text-xs opacity-70">Test as {role}</span>
-                  </Button>
-                ))}
-              </div>
-              
-              <Separator />
-              
-              <div className="bg-muted p-4 rounded-lg space-y-2">
-                <h4 className="font-semibold text-sm">Current Scoping:</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="text-muted-foreground">Region:</div>
-                  <div>{user.region}</div>
-                  <div className="text-muted-foreground">Zone:</div>
-                  <div>{user.zone}</div>
-                  <div className="text-muted-foreground">Woreda:</div>
-                  <div>{user.woreda}</div>
-                </div>
               </div>
             </CardContent>
           </Card>

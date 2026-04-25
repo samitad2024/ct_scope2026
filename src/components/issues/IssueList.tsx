@@ -8,17 +8,11 @@ import {
   Edit, 
   Trash2,
   CheckCircle2,
-  Clock,
-  AlertTriangle,
   AlertCircle,
   MapPin,
   User,
-  Calendar,
-  MessageSquare,
-  History
+  ArrowUpRight
 } from 'lucide-react';
-import { mockIssues, mockUsers } from '../../services/mock';
-import { Issue, IssueStatus, IssuePriority } from '../../types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
@@ -58,35 +52,43 @@ import {
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
 import { Link } from 'react-router-dom';
-import { DataTable } from '../shared/DataTable';
+import { useIssues } from '../../features/issues/hooks';
+import { Skeleton } from '../ui/skeleton';
+import { Issue } from '../../types/api';
 
 export default function IssueManagement() {
-  const [issues, setIssues] = useState<Issue[]>(mockIssues);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
+  const { data, isLoading } = useIssues({
+    status: statusFilter === 'ALL' ? undefined : statusFilter,
+    page: 1,
+    limit: 50
+  });
+
+  const issues = data?.issues ?? [];
+
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          issue.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || issue.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
-  const getStatusBadge = (status: IssueStatus) => {
+  const getStatusBadge = (status: Issue['status']) => {
     switch (status) {
       case 'reported': return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Reported</Badge>;
       case 'verified': return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Verified</Badge>;
       case 'assigned': return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">Assigned</Badge>;
       case 'in_progress': return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">In Progress</Badge>;
       case 'resolved': return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Resolved</Badge>;
-      case 'closed': return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Closed</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
     }
   };
 
-  const getPriorityBadge = (priority: IssuePriority) => {
-    switch (priority) {
+  const getPriorityBadge = (priority: string | null) => {
+    if (!priority) return <Badge variant="outline">N/A</Badge>;
+    switch (priority.toLowerCase()) {
       case 'urgent': return <Badge variant="destructive">Urgent</Badge>;
       case 'high': return <Badge variant="default" className="bg-orange-500 hover:bg-orange-600">High</Badge>;
       case 'medium': return <Badge variant="secondary">Medium</Badge>;
@@ -127,7 +129,7 @@ export default function IssueManagement() {
               <SelectItem value="reported">Reported</SelectItem>
               <SelectItem value="in_progress">In Progress</SelectItem>
               <SelectItem value="resolved">Resolved</SelectItem>
-              <SelectItem value="closed">Closed</SelectItem>
+              <SelectItem value="assigned">Assigned</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline" size="icon">
@@ -144,31 +146,43 @@ export default function IssueManagement() {
               <TableHead>Issue Details</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
+              <TableHead>Votes</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredIssues.length > 0 ? (
+            {isLoading ? (
+              [1, 2, 3, 4, 5].map(i => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-10 w-full" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-10" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-10 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredIssues.length > 0 ? (
               filteredIssues.map((issue) => (
                 <TableRow key={issue.id}>
-                  <TableCell className="font-mono text-xs font-bold">{issue.id}</TableCell>
+                  <TableCell className="font-mono text-xs font-bold truncate max-w-[80px]">{issue.id}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-medium">{issue.title}</span>
+                      <span className="font-medium text-sm">{issue.title}</span>
                       <span className="text-xs text-muted-foreground truncate max-w-[200px]">
-                        {issue.woreda}, {issue.zone}, {issue.region}
+                        {issue.woreda_name}, {issue.zone_name}, {issue.region_name}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{issue.category}</Badge>
+                    <Badge variant="outline" className="capitalize">{issue.category}</Badge>
                   </TableCell>
                   <TableCell>{getStatusBadge(issue.status)}</TableCell>
-                  <TableCell>{getPriorityBadge(issue.priority)}</TableCell>
+                  <TableCell className="text-xs font-medium">{issue.votes}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
-                    {new Date(issue.createdAt).toLocaleDateString()}
+                    {new Date(issue.reported_at).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -188,7 +202,7 @@ export default function IssueManagement() {
                                 </div>
                                 <SheetTitle className="text-2xl">{selectedIssue.title}</SheetTitle>
                                 <SheetDescription>
-                                  Reported on {new Date(selectedIssue.createdAt).toLocaleString()}
+                                  Reported on {new Date(selectedIssue.reported_at).toLocaleString()}
                                 </SheetDescription>
                               </SheetHeader>
                               
@@ -212,7 +226,7 @@ export default function IssueManagement() {
                                     </div>
                                     <div className="space-y-1">
                                       <p className="text-xs text-muted-foreground">Category</p>
-                                      <Badge variant="secondary">{selectedIssue.category}</Badge>
+                                      <Badge variant="secondary" className="capitalize">{selectedIssue.category}</Badge>
                                     </div>
                                   </div>
 
@@ -221,9 +235,12 @@ export default function IssueManagement() {
                                       <MapPin className="h-4 w-4" /> Location
                                     </h4>
                                     <div className="rounded-lg border bg-muted/50 p-3 text-sm">
-                                      <p className="font-medium">{selectedIssue.woreda}, {selectedIssue.zone}</p>
+                                      <p className="font-medium">{selectedIssue.address}</p>
                                       <p className="text-xs text-muted-foreground mt-1">
-                                        {selectedIssue.region} (Lat: {selectedIssue.latitude}, Lng: {selectedIssue.longitude})
+                                        {selectedIssue.woreda_name}, {selectedIssue.zone_name}, {selectedIssue.region_name}
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground mt-1">
+                                        (Lat: {selectedIssue.latitude}, Lng: {selectedIssue.longitude})
                                       </p>
                                     </div>
                                   </div>
@@ -234,23 +251,20 @@ export default function IssueManagement() {
                                     </h4>
                                     <div className="flex items-center gap-3 rounded-lg border p-3">
                                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                        {mockUsers.find(u => u.id === selectedIssue.reportedBy)?.name.charAt(0) || 'R'}
+                                        {selectedIssue.reporter_name?.charAt(0) || 'R'}
                                       </div>
                                       <div className="flex-1">
-                                        <p className="text-sm font-medium">{mockUsers.find(u => u.id === selectedIssue.reportedBy)?.name || selectedIssue.reportedBy}</p>
-                                        <p className="text-xs text-muted-foreground">{mockUsers.find(u => u.id === selectedIssue.reportedBy)?.phone || 'N/A'}</p>
+                                        <p className="text-sm font-medium">{selectedIssue.reporter_name}</p>
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="space-y-2">
-                                    <h4 className="text-sm font-semibold">Evidence</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      {selectedIssue.images.map((img, i) => (
-                                        <img key={i} src={img} alt="Evidence" className="rounded-lg object-cover w-full h-32 border" />
-                                      ))}
+                                  {selectedIssue.image_url && (
+                                    <div className="space-y-2">
+                                      <h4 className="text-sm font-semibold">Evidence</h4>
+                                      <img src={selectedIssue.image_url} alt="Evidence" className="rounded-lg object-cover w-full h-auto border shadow-sm" />
                                     </div>
-                                  </div>
+                                  )}
                                 </div>
                               </ScrollArea>
 
@@ -296,8 +310,8 @@ export default function IssueManagement() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
-                  No issues found.
+                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground text-sm">
+                  No issues found matching your criteria.
                 </TableCell>
               </TableRow>
             )}

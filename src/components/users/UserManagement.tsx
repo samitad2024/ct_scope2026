@@ -7,16 +7,16 @@ import {
   Shield, 
   Mail, 
   MapPin,
-  Calendar,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Activity
 } from 'lucide-react';
 import { useUsers, useCreateUser, useUpdateUser } from '../../features/users/hooks';
-import { User, UserRole } from '../../types';
+import { User, UserRole, Technician } from '../../types/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import {
   Table,
   TableBody,
@@ -45,53 +45,67 @@ export default function UserManagement() {
   const updateUserMutation = useUpdateUser();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   const handleCreateUser = async (data: UserFormData) => {
     try {
-      await createUserMutation.mutateAsync(data as Omit<User, 'id'>);
+      const payload: CreateAdminRequest = {
+        name: data.name,
+        phone_number: data.phone,
+        role: data.role as any,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      };
+      await createUserMutation.mutateAsync(payload);
       setIsCreateModalOpen(false);
       toast.success('User created successfully');
-    } catch (error) {
-      toast.error('Failed to create user');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create user');
     }
   };
 
   const handleUpdateUser = async (data: UserFormData) => {
     if (!editingUser) return;
     try {
-      await updateUserMutation.mutateAsync({ id: editingUser.id, user: data as Partial<User> });
+      // Map to the fields the backend expects for an update
+      const updatePayload = {
+        full_name: data.name,
+        phone: data.phone,
+        role: data.role,
+        is_active: data.status === 'active'
+      };
+      await updateUserMutation.mutateAsync({ id: editingUser.id, user: updatePayload as any });
       setEditingUser(null);
       toast.success('User updated successfully');
-    } catch (error) {
-      toast.error('Failed to update user');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update user');
     }
   };
 
-  const getRoleBadge = (role: UserRole) => {
+  const getRoleBadge = (role: string) => {
     switch (role) {
       case 'federal_admin': return <Badge className="bg-red-500 hover:bg-red-600">Federal Admin</Badge>;
       case 'regional_admin': return <Badge className="bg-blue-500 hover:bg-blue-600">Regional Admin</Badge>;
       case 'zonal_admin': return <Badge className="bg-purple-500 hover:bg-purple-600">Zonal Admin</Badge>;
       case 'woreda_admin': return <Badge className="bg-orange-500 hover:bg-orange-600">Woreda Admin</Badge>;
       case 'technician': return <Badge className="bg-green-500 hover:bg-green-600">Technician</Badge>;
-      default: return <Badge variant="outline">{role}</Badge>;
+      default: return <Badge variant="outline" className="capitalize">{role}</Badge>;
     }
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-full">Loading users...</div>;
+    return <div className="flex items-center justify-center h-full">Loading personnel data...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-muted-foreground">Manage administrative access and roles across all tiers of the platform.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Personnel Management</h1>
+          <p className="text-muted-foreground">Manage administrative access and field officers across the platform.</p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)}>
-          <UserPlus className="mr-2 h-4 w-4" /> Add New User
+          <UserPlus className="mr-2 h-4 w-4" /> Add New Admin
         </Button>
       </div>
 
@@ -99,13 +113,13 @@ export default function UserManagement() {
         <div className="relative w-full md:w-96">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users by name or email..."
+            placeholder="Search personnel by name..."
             className="pl-8"
           />
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="h-9 px-4">Total Users: {users.length}</Badge>
-          <Badge variant="outline" className="h-9 px-4">Active: {users.filter(u => u.status === 'active').length}</Badge>
+          <Badge variant="outline" className="h-9 px-4">Total: {users.length}</Badge>
+          <Badge variant="outline" className="h-9 px-4">Active: {(users as Technician[]).filter(u => u.is_active).length}</Badge>
         </div>
       </div>
 
@@ -113,38 +127,38 @@ export default function UserManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Region / Zone</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Personnel</TableHead>
               <TableHead>Phone</TableHead>
+              <TableHead>Workload</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
+            {(users as Technician[]).map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{user.full_name?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <span className="font-medium">{user.name}</span>
-                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                      <span className="font-medium">{user.full_name}</span>
+                      <span className="text-xs text-muted-foreground font-mono truncate max-w-[150px]">{user.id}</span>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{getRoleBadge(user.role)}</TableCell>
+                <TableCell className="text-sm">
+                  {user.phone}
+                </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1 text-xs">
-                    <MapPin className="h-3 w-3 text-muted-foreground" />
-                    <span>{user.region}</span>
-                    {user.zone && <span className="text-muted-foreground"> / {user.zone}</span>}
+                  <div className="flex items-center gap-2 text-xs font-medium">
+                    <Activity className="h-3 w-3 text-muted-foreground" />
+                    <span>{user.active_assignments} Active Tasks</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  {user.status === 'active' ? (
+                  {user.is_active ? (
                     <div className="flex items-center gap-1 text-green-500 text-xs font-medium">
                       <CheckCircle2 className="h-3 w-3" /> Active
                     </div>
@@ -153,9 +167,6 @@ export default function UserManagement() {
                       <XCircle className="h-3 w-3" /> Inactive
                     </div>
                   )}
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
-                  {user.phone}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -169,20 +180,27 @@ export default function UserManagement() {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       </DropdownMenuGroup>
                       <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                        <Shield className="mr-2 h-4 w-4" /> Edit User
+                        <Shield className="mr-2 h-4 w-4" /> Edit Permissions
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Mail className="mr-2 h-4 w-4" /> Send Message
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-destructive">
-                        Deactivate User
+                        Deactivate Account
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
+            {users.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  No personnel found.
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
@@ -190,8 +208,8 @@ export default function UserManagement() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Add New User"
-        description="Create a new administrative user for the platform."
+        title="Add New Admin"
+        description="Create a new administrative user with geospatial boundaries."
       >
         <UserForm
           onSubmit={handleCreateUser}
@@ -202,8 +220,8 @@ export default function UserManagement() {
       <Modal
         isOpen={!!editingUser}
         onClose={() => setEditingUser(null)}
-        title="Edit User"
-        description="Update user information and permissions."
+        title="Edit Personnel"
+        description="Update personnel information and permissions."
       >
         {editingUser && (
           <UserForm

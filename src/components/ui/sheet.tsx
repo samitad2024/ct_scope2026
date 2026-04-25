@@ -14,7 +14,7 @@ function SheetTrigger({ asChild, ...props }: SheetPrimitive.Trigger.Props & { as
     return (
       <SheetPrimitive.Trigger
         data-slot="sheet-trigger"
-        nativeButton={false}
+        nativeButton={true}
         render={props.children as React.ReactElement}
         {...Object.fromEntries(Object.entries(props).filter(([key]) => key !== 'children'))}
       />
@@ -28,7 +28,7 @@ function SheetClose({ asChild, ...props }: SheetPrimitive.Close.Props & { asChil
     return (
       <SheetPrimitive.Close
         data-slot="sheet-close"
-        nativeButton={false}
+        nativeButton={true}
         render={props.children as React.ReactElement}
         {...Object.fromEntries(Object.entries(props).filter(([key]) => key !== 'children'))}
       />

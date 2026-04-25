@@ -1,36 +1,19 @@
-import { User } from '../../types';
-import * as usersApi from '../../services/api/users';
+import { User, ApiResponse, CreateAdminRequest, Technician } from '../../types/api';
+import { apiClient } from '../../services/api/api-client';
 
-const USE_MOCK = true;
-
-export const getUsers = async (currentUser?: User | null): Promise<User[]> => {
-  if (USE_MOCK) {
-    return usersApi.getUsers(currentUser);
-  }
-  // return apiClient.get<User[]>('/users');
-  return [];
+export const getUsers = async (): Promise<ApiResponse<Technician[]>> => {
+  return apiClient.get<ApiResponse<Technician[]>>('/api/admin/technicians');
 };
 
-export const getUserById = async (id: string): Promise<User | undefined> => {
-  if (USE_MOCK) {
-    return usersApi.getUserById(id);
-  }
-  // return apiClient.get<User>(`/users/${id}`);
-  return undefined;
+export const getUserById = async (id: string): Promise<ApiResponse<User>> => {
+  // Backwards compatibility or specific user fetch if endpoint existed
+  return apiClient.get<ApiResponse<User>>(`/api/users/${id}`);
 };
 
-export const createUser = async (user: Omit<User, 'id'>): Promise<User> => {
-  if (USE_MOCK) {
-    return usersApi.createUser(user);
-  }
-  // return apiClient.post<User>('/users', user);
-  return {} as User;
+export const createUser = async (user: CreateAdminRequest): Promise<ApiResponse<User>> => {
+  return apiClient.post<ApiResponse<User>>('/api/admin/create-admin', user);
 };
 
-export const updateUser = async (id: string, user: Partial<User>): Promise<User> => {
-  if (USE_MOCK) {
-    return usersApi.updateUser(id, user);
-  }
-  // return apiClient.put<User>(`/users/${id}`, user);
-  return {} as User;
+export const updateUser = async (id: string, user: Partial<User>): Promise<ApiResponse<User>> => {
+  return apiClient.put<ApiResponse<User>>(`/api/users/${id}`, user);
 };

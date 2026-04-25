@@ -51,7 +51,7 @@ export function UserForm({ initialData, onSubmit, isSubmitting }: UserFormProps)
             <Label htmlFor="role">Role</Label>
             <Select
               onValueChange={(value) => methods.setValue('role', value as any)}
-              defaultValue={methods.getValues('role')}
+              value={methods.watch('role') ?? ''}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select role" />
@@ -59,7 +59,7 @@ export function UserForm({ initialData, onSubmit, isSubmitting }: UserFormProps)
               <SelectContent>
                 <SelectItem value="federal_admin">Federal Admin</SelectItem>
                 <SelectItem value="regional_admin">Regional Admin</SelectItem>
-                <SelectItem value="zonal_admin">Zonal Admin</SelectItem>
+                <SelectItem value="zone_admin">Zonal Admin</SelectItem>
                 <SelectItem value="woreda_admin">Woreda Admin</SelectItem>
                 <SelectItem value="technician">Technician</SelectItem>
               </SelectContent>
@@ -93,11 +93,34 @@ export function UserForm({ initialData, onSubmit, isSubmitting }: UserFormProps)
             )}
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="latitude">Latitude</Label>
+              <Input
+                id="latitude"
+                type="number"
+                step="0.000001"
+                {...methods.register('latitude')}
+                placeholder="9.0192"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="longitude">Longitude</Label>
+              <Input
+                id="longitude"
+                type="number"
+                step="0.000001"
+                {...methods.register('longitude')}
+                placeholder="38.7525"
+              />
+            </div>
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>
             <Select
               onValueChange={(value) => methods.setValue('status', value as any)}
-              defaultValue={methods.getValues('status')}
+              value={methods.watch('status') ?? ''}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
