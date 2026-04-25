@@ -34,9 +34,6 @@ class ApiClient {
     try {
       const fullUrl = `${this.baseUrl}${endpoint}`;
       console.log(`[ApiClient] Request: ${options.method || 'GET'} ${fullUrl}`);
-      if (options.body) {
-        console.log(`[ApiClient] Body:`, options.body);
-      }
       console.log(`[ApiClient] Auth Token present: ${!!token}`);
       
       const response = await fetch(fullUrl, config);

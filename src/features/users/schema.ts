@@ -8,9 +8,10 @@ export const userSchema = z.object({
   zone: z.string().optional(),
   woreda: z.string().optional(),
   phone: z.string().min(9, 'Phone number must be at least 9 characters'),
+  password: z.string().min(6, 'Password is required for new accounts').default('TempPass123'),
   status: z.enum(['active', 'inactive']),
-  latitude: z.coerce.number().default(9.0192),
-  longitude: z.coerce.number().default(38.7525),
+  latitude: z.coerce.number().default(9.03),
+  longitude: z.coerce.number().default(38.7578),
 });
 
 export type UserFormData = z.infer<typeof userSchema>;

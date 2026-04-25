@@ -90,10 +90,10 @@ export interface AuthState {
 }
 
 export interface CreateAdminRequest {
-  name: string;
-  phone_number: string;
+  full_name: string;
+  phone: string;
   password?: string;
-  role: 'regional_admin' | 'zone_admin' | 'city_admin' | 'woreda_admin' | 'federal_admin';
+  role: 'regional_admin' | 'zone_admin' | 'city_admin' | 'woreda_admin';
   latitude: number;
   longitude: number;
 }

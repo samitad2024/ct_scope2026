@@ -50,9 +50,10 @@ export default function UserManagement() {
   const handleCreateUser = async (data: UserFormData) => {
     try {
       const payload: CreateAdminRequest = {
-        name: data.name,
-        phone_number: data.phone,
-        role: data.role as any,
+        full_name: data.name,
+        phone: data.phone,
+        password: data.password,
+        role: (data.role === 'federal_admin' ? 'regional_admin' : data.role) as any,
         latitude: data.latitude,
         longitude: data.longitude,
       };

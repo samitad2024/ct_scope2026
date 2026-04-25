@@ -40,15 +40,6 @@ async function startServer() {
         console.log(`[Proxy] Backend error ${statusCode} for ${userReq.url}`);
       }
 
-      if (userReq.url.includes('/admin/create-admin')) {
-        try {
-          const body = JSON.parse(userReq.body || '{}');
-          console.log(`[Proxy] Create Admin Payload:`, body);
-        } catch (e) {
-          // Body might not be available here if not parsed yet
-        }
-      }
-
       if (userReq.url.includes('/auth/login')) {
         try {
           const responseString = proxyResData.toString('utf8');

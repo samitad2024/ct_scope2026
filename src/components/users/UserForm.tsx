@@ -12,10 +12,18 @@ interface UserFormProps {
 }
 
 export function UserForm({ initialData, onSubmit, isSubmitting }: UserFormProps) {
+  const defaultValues = {
+    role: 'technician',
+    status: 'active',
+    latitude: 9.0192,
+    longitude: 38.7525,
+    ...initialData
+  } as any;
+
   return (
     <Form
       schema={userSchema}
-      defaultValues={initialData}
+      defaultValues={defaultValues}
       onSubmit={onSubmit}
       isSubmitting={isSubmitting}
       submitLabel={initialData ? 'Update User' : 'Create User'}
@@ -91,6 +99,25 @@ export function UserForm({ initialData, onSubmit, isSubmitting }: UserFormProps)
             {methods.formState.errors.region && (
               <p className="text-xs text-destructive">{methods.formState.errors.region.message}</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="zone">Zone / Sub-city</Label>
+              <Input
+                id="zone"
+                {...methods.register('zone')}
+                placeholder="Enter zone"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="woreda">Woreda</Label>
+              <Input
+                id="woreda"
+                {...methods.register('woreda')}
+                placeholder="Enter woreda"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
