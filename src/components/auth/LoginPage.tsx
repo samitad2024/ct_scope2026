@@ -32,7 +32,7 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.post<LoginResponse>('/api/auth/login', values);
+      const response = await apiClient.post<LoginResponse>('/auth/login', values);
       login(response);
       toast.success('Login successful! Welcome back.');
       navigate('/');

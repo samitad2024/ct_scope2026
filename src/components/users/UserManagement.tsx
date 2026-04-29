@@ -12,7 +12,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useUsers, useCreateUser, useUpdateUser } from '../../features/users/hooks';
-import { User, UserRole, Technician } from '../../types/api';
+import { User, UserRole, Technician, CreateAdminRequest } from '../../types/api';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';

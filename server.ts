@@ -7,23 +7,28 @@ import proxy from "express-http-proxy";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const BACKEND_URL = process.env.BACKEND_URL || "https://incident-report-api-krni.onrender.com";
+const BACKEND_URL = process.env.BACKEND_URL || "https://incident-report-backend-2.onrender.com";
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // 1. Proxy /api requests FIRST (before body parsers)
+  // 1. Proxy /api and /auth requests FIRST (before body parsers)
   // This ensures the raw request stream is forwarded correctly to the backend
-  app.use("/api", proxy(BACKEND_URL, {
+
+  // Combined proxy for /api and /auth
+  const apiProxy = proxy(BACKEND_URL, {
     proxyReqPathResolver: (req) => {
-      // req.url is the part of the URL after "/api"
-      // e.g. for "/api/auth/login", req.url is "/auth/login"
-      const isAuthPath = req.url.startsWith('/auth');
+      let resolvedPath;
+      // If frontend calls /auth/login, it should go to /auth/login on the backend (testing showed /api/auth/login is 404)
+      if (req.originalUrl.startsWith('/auth')) {
+        resolvedPath = "/auth" + req.url;
+      } else {
+        // If frontend calls /api/..., prepend /api (req.url usually lacks it when mounted on /api)
+        resolvedPath = "/api" + req.url;
+      }
       
-      const resolvedPath = isAuthPath ? req.url : "/api" + req.url;
-      
-      console.log(`[Proxy] Routing ${req.method} /api${req.url} -> ${BACKEND_URL}${resolvedPath}`);
+      console.log(`[Proxy] Routing ${req.method} ${req.originalUrl} -> ${BACKEND_URL}${resolvedPath}`);
       return resolvedPath;
     },
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
@@ -40,7 +45,8 @@ async function startServer() {
         console.log(`[Proxy] Backend error ${statusCode} for ${userReq.url}`);
       }
 
-      if (userReq.url.includes('/auth/login')) {
+      const isLogin = userReq.originalUrl?.includes('/auth/login') || userReq.url === '/login';
+      if (isLogin) {
         try {
           const responseString = proxyResData.toString('utf8');
           // Only attempt parse if it looks like JSON
@@ -61,7 +67,10 @@ async function startServer() {
       console.error(`[Proxy Error] ${err.message}`);
       next(err);
     }
-  }));
+  });
+
+  app.use("/api", apiProxy);
+  app.use("/auth", apiProxy);
 
   // 2. Standard Middleware
   app.use(express.json());
