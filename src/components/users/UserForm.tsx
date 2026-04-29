@@ -67,7 +67,8 @@ export function UserForm({ initialData, onSubmit, isSubmitting }: UserFormProps)
               <SelectContent>
                 <SelectItem value="federal_admin">Federal Admin</SelectItem>
                 <SelectItem value="regional_admin">Regional Admin</SelectItem>
-                <SelectItem value="zone_admin">Zonal Admin</SelectItem>
+                <SelectItem value="zone_admin">Zone Admin</SelectItem>
+                <SelectItem value="city_admin">City Admin</SelectItem>
                 <SelectItem value="woreda_admin">Woreda Admin</SelectItem>
                 <SelectItem value="technician">Technician</SelectItem>
               </SelectContent>

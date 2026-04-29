@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   MapPin, 
-  User, 
+  User as UserIcon, 
   AlertCircle, 
   MessageSquare, 
   History,
   Camera,
   ExternalLink,
   Send,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
@@ -19,11 +20,42 @@ import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '../ui/input';
 import { Avatar, AvatarFallback } from '../ui/avatar';
-import { useIssue } from '../../features/issues/hooks';
+import { useIssue, useAssignIssue } from '../../features/issues/hooks';
+import { useUsers } from '../../features/users/hooks';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "../ui/dialog";
+import { toast } from 'sonner';
 
 export default function IssueDetail() {
   const { id } = useParams<{ id: string }>();
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState<string | null>(null);
+
   const { data: issue, isLoading, error } = useIssue(id || '');
+  const { data: technicians = [], isLoading: techsLoading } = useUsers();
+  const assignMutation = useAssignIssue();
+
+  const handleAssign = async () => {
+    if (!selectedTechnicianId || !id) return;
+
+    try {
+      await assignMutation.mutateAsync({ 
+        issueId: id, 
+        technicianId: selectedTechnicianId 
+      });
+      toast.success('Technician assigned successfully');
+      setIsAssignModalOpen(false);
+    } catch (err) {
+      toast.error('Failed to assign technician');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -128,7 +160,7 @@ export default function IssueDetail() {
 
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <User className="h-4 w-4" /> Reporter Details
+                    <UserIcon className="h-4 w-4" /> Reporter Details
                   </h4>
                   <div className="space-y-2 text-sm border-l-2 border-primary/20 pl-3">
                     <div className="flex items-center gap-2">
@@ -188,24 +220,71 @@ export default function IssueDetail() {
               <CardTitle className="text-lg">Assignment Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {issue.assigned_technician ? (
+              {issue.assigned_to ? (
                 <div className="flex items-center gap-3 rounded-lg border p-3 bg-primary/5 border-primary/20">
                   <Avatar>
-                    <AvatarFallback>{issue.assigned_technician.full_name?.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{issue.assigned_technician?.full_name?.charAt(0) || 'T'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{issue.assigned_technician.full_name}</p>
-                    <p className="text-xs text-muted-foreground">Assigned Technician</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Phone: {issue.assigned_technician.phone}</p>
+                    <p className="text-sm font-medium">{issue.assigned_technician?.full_name || 'Assigned Technician'}</p>
+                    <p className="text-xs text-muted-foreground">ID: {issue.assigned_to}</p>
+                    {issue.assigned_at && (
+                      <p className="text-[10px] text-muted-foreground mt-1">Assigned: {new Date(issue.assigned_at).toLocaleDateString()}</p>
+                    )}
                   </div>
                 </div>
               ) : (
                 <div className="p-4 border-2 border-dashed rounded-lg text-center space-y-3">
                   <p className="text-sm text-muted-foreground font-medium">Currently Unassigned</p>
-                  <Button className="w-full" size="sm">Select Personnel</Button>
+                  
+                  <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full" size="sm">Select Personnel</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Assign Technician</DialogTitle>
+                        <DialogDescription>
+                          Select a technician to handle this infrastructure issue.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="max-h-[300px] overflow-y-auto space-y-2 py-4">
+                        {techsLoading ? (
+                          <div className="flex justify-center p-4"><Loader2 className="animate-spin h-6 w-6" /></div>
+                        ) : technicians.map((tech) => (
+                          <div 
+                            key={tech.id}
+                            onClick={() => setSelectedTechnicianId(tech.id)}
+                            className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors ${selectedTechnicianId === tech.id ? 'border-primary bg-primary/5' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-8 w-8">
+                                <AvatarFallback>{tech.full_name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{tech.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{tech.phone}</p>
+                              </div>
+                            </div>
+                            {selectedTechnicianId === tech.id && <Check className="h-4 w-4 text-primary" />}
+                          </div>
+                        ))}
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsAssignModalOpen(false)}>Cancel</Button>
+                        <Button 
+                          onClick={handleAssign} 
+                          disabled={!selectedTechnicianId || assignMutation.isPending}
+                        >
+                          {assignMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Confirm Assignment
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               )}
-              <Button variant="outline" className="w-full">Update Workflow Status</Button>
+              <Button variant="outline" className="w-full" disabled>Update Workflow Status</Button>
             </CardContent>
           </Card>
 

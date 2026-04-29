@@ -36,7 +36,8 @@ import {
 } from '../ui/dropdown-menu';
 import { Modal } from '../shared/Modal';
 import { UserForm } from './UserForm';
-import { UserFormData } from '../../features/users/schema';
+import { CreateAdminForm } from './CreateAdminForm';
+import { UserFormData, CreateAdminFormData } from '../../features/users/schema';
 import { toast } from 'sonner';
 
 export default function UserManagement() {
@@ -47,21 +48,13 @@ export default function UserManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
 
-  const handleCreateUser = async (data: UserFormData) => {
+  const handleCreateHierarchicalAdmin = async (data: CreateAdminFormData) => {
     try {
-      const payload: CreateAdminRequest = {
-        full_name: data.name,
-        phone: data.phone,
-        password: data.password,
-        role: (data.role === 'federal_admin' ? 'regional_admin' : data.role) as any,
-        latitude: data.latitude,
-        longitude: data.longitude,
-      };
-      await createUserMutation.mutateAsync(payload);
+      await createUserMutation.mutateAsync(data);
       setIsCreateModalOpen(false);
-      toast.success('User created successfully');
+      toast.success('Hierarchical admin created successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create user');
+      toast.error(error.message || 'Failed to create admin');
     }
   };
 
@@ -87,9 +80,11 @@ export default function UserManagement() {
     switch (role) {
       case 'federal_admin': return <Badge className="bg-red-500 hover:bg-red-600">Federal Admin</Badge>;
       case 'regional_admin': return <Badge className="bg-blue-500 hover:bg-blue-600">Regional Admin</Badge>;
-      case 'zonal_admin': return <Badge className="bg-purple-500 hover:bg-purple-600">Zonal Admin</Badge>;
+      case 'zone_admin': return <Badge className="bg-purple-500 hover:bg-purple-600">Zone Admin</Badge>;
+      case 'city_admin': return <Badge className="bg-amber-500 hover:bg-amber-600">City Admin</Badge>;
       case 'woreda_admin': return <Badge className="bg-orange-500 hover:bg-orange-600">Woreda Admin</Badge>;
       case 'technician': return <Badge className="bg-green-500 hover:bg-green-600">Technician</Badge>;
+      case 'citizen': return <Badge variant="secondary">Citizen</Badge>;
       default: return <Badge variant="outline" className="capitalize">{role}</Badge>;
     }
   };
@@ -129,6 +124,7 @@ export default function UserManagement() {
           <TableHeader>
             <TableRow>
               <TableHead>Personnel</TableHead>
+              <TableHead>Role</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Workload</TableHead>
               <TableHead>Status</TableHead>
@@ -136,7 +132,7 @@ export default function UserManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(users as Technician[]).map((user) => (
+            {(users as any[]).map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -148,6 +144,9 @@ export default function UserManagement() {
                       <span className="text-xs text-muted-foreground font-mono truncate max-w-[150px]">{user.id}</span>
                     </div>
                   </div>
+                </TableCell>
+                <TableCell>
+                  {getRoleBadge(user.role)}
                 </TableCell>
                 <TableCell className="text-sm">
                   {user.phone}
@@ -209,11 +208,11 @@ export default function UserManagement() {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Add New Admin"
-        description="Create a new administrative user with geospatial boundaries."
+        title="Add New Hierarchical Admin"
+        description="Create a new administrative user. You can only create roles directly below your level in the hierarchy."
       >
-        <UserForm
-          onSubmit={handleCreateUser}
+        <CreateAdminForm
+          onSubmit={handleCreateHierarchicalAdmin}
           isSubmitting={createUserMutation.isPending}
         />
       </Modal>

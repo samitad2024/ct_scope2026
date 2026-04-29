@@ -13,59 +13,41 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // 1. Proxy /api and /auth requests FIRST (before body parsers)
-  // This ensures the raw request stream is forwarded correctly to the backend
-
-  // Combined proxy for /api and /auth
+  // 1. Proxy /api and /auth requests FIRST
   const apiProxy = proxy(BACKEND_URL, {
     proxyReqPathResolver: (req) => {
-      let resolvedPath;
-      // If frontend calls /auth/login, it should go to /auth/login on the backend (testing showed /api/auth/login is 404)
-      if (req.originalUrl.startsWith('/auth')) {
-        resolvedPath = "/auth" + req.url;
-      } else {
-        // If frontend calls /api/..., prepend /api (req.url usually lacks it when mounted on /api)
-        resolvedPath = "/api" + req.url;
-      }
-      
-      console.log(`[Proxy] Routing ${req.method} ${req.originalUrl} -> ${BACKEND_URL}${resolvedPath}`);
+      // Use originalUrl to preserve query parameters
+      const resolvedPath = req.originalUrl;
+      console.log(`[Proxy] ${req.method} ${req.originalUrl} -> ${BACKEND_URL}${resolvedPath}`);
       return resolvedPath;
     },
     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      // Ensure headers object exists
+      proxyReqOpts.headers = proxyReqOpts.headers || {};
+      
+      // Forward all headers except host (which should be set by backend URL)
+      // express-http-proxy usually handles this, but let's be safe
       const authHeader = srcReq.headers['authorization'];
       if (authHeader) {
         proxyReqOpts.headers['authorization'] = authHeader;
-        console.log(`[Proxy] Forwarding Auth Header for ${srcReq.url}`);
       }
+      
       return proxyReqOpts;
     },
     userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
       const statusCode = proxyRes.statusCode || 200;
       if (statusCode >= 400) {
-        console.log(`[Proxy] Backend error ${statusCode} for ${userReq.url}`);
-      }
-
-      const isLogin = userReq.originalUrl?.includes('/auth/login') || userReq.url === '/login';
-      if (isLogin) {
-        try {
-          const responseString = proxyResData.toString('utf8');
-          // Only attempt parse if it looks like JSON
-          if (responseString.trim().startsWith('{')) {
-            const data = JSON.parse(responseString);
-            const token = data.accessToken || data.token || (data.data && (data.data.accessToken || data.data.token));
-            console.log(`[Proxy] Login detected. Token found: ${!!token}`);
-          } else {
-            console.warn(`[Proxy] Login response is not JSON: ${responseString.substring(0, 50)}...`);
-          }
-        } catch (e) {
-          console.error(`[Proxy] Login response parse failed:`, e);
-        }
+        console.log(`[Proxy] Backend returned ${statusCode} for ${userReq.url}`);
       }
       return proxyResData;
     },
-    userResError: (err, res, next) => {
-      console.error(`[Proxy Error] ${err.message}`);
-      next(err);
+    proxyErrorHandler: (err, res, next) => {
+      console.error(`[Proxy Error] for ${res.req.url}: ${err.message}`);
+      res.status(502).json({ 
+        success: false, 
+        message: "Bad Gateway: Proxy failed to reach backend.", 
+        error: err.message 
+      });
     }
   });
 

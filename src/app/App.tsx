@@ -14,6 +14,7 @@ import Settings from '../components/layout/Settings';
 import Notifications from '../features/notifications/components/Notifications';
 import Reports from '../components/shared/Reports';
 import LoginPage from '../components/auth/LoginPage';
+import TaskList from '../components/technician/TaskList';
 import { TooltipProvider } from '../components/ui/tooltip';
 import { ThemeProvider as NextThemesProvider, type ThemeProviderProps } from 'next-themes';
 import { ProtectedRoute } from '../components/shared/ProtectedRoute';
@@ -51,6 +52,7 @@ export default function App() {
                 <Route path="sensors" element={<IoTSensors />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="audit-logs" element={<AuditLogs />} />
+                <Route path="tasks" element={<TaskList />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="reports" element={<Reports />} />

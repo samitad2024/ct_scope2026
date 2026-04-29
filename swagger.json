@@ -1,0 +1,1439 @@
+{
+  "swaggerDoc": {
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Incident Reporting API",
+      "version": "1.0.0",
+      "description": "API documentation for Incident Reporting System"
+    },
+    "servers": [
+      {
+        "url": "https://incident-report-api-krni.onrender.com/"
+      }
+    ],
+    "paths": {
+      "/api/admin/dashboard": {
+        "get": {
+          "summary": "Get dashboard issue counts (scoped)",
+          "tags": [
+            "Admin"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Issue counts",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "total": 120,
+                      "pending": 35,
+                      "in_progress": 20,
+                      "completed": 65
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/scoped-issues/pending": {
+        "get": {
+          "summary": "Get pending issues scoped by admin level",
+          "tags": [
+            "Admin"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "category",
+              "schema": {
+                "type": "string",
+                "description": "Filter by issue category"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 1,
+                "description": "Page number"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 20,
+                "description": "Number of issues per page"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of pending issues scoped by admin clearance",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "issues": [
+                      {
+                        "id": "c0ba5c65-5f6c-48a8-9ef0-a2741f907b5a",
+                        "title": "Broken street light",
+                        "category": "electricity",
+                        "status": "reported",
+                        "address": "Bole subcity, Addis Ababa",
+                        "reporter_name": "Abenezer Seleshi Abdisa"
+                      }
+                    ],
+                    "total": 1,
+                    "page": 1,
+                    "limit": 20
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/scoped-issues": {
+        "get": {
+          "summary": "Get issues scoped by admin level",
+          "description": "Returns issues based on the admin's clearance level:\n  - woreda_admin: issues in their woreda\n  - city_admin: issues in their city\n  - zone_admin: issues in their zone\n  - regional_admin: issues in their region\n  - federal_admin: all issues\n",
+          "tags": [
+            "Admin"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "description": "Filter issues by status (e.g., reported, verified, assigned, in_progress, resolved)"
+              }
+            },
+            {
+              "in": "query",
+              "name": "category",
+              "schema": {
+                "type": "string",
+                "description": "Filter issues by category (e.g., electricity, water)"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 1,
+                "description": "Page number for pagination"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 20,
+                "description": "Number of issues per page"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of issues scoped by admin clearance",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "issues": [
+                      {
+                        "id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                        "issue_number": null,
+                        "title": "Broken street light",
+                        "description": "Street light has been broken for a week days",
+                        "category": "electricity",
+                        "address": "Bole",
+                        "reporter_id": "cee5c2e5-130c-4e20-b22d-6a5fb8a240aa",
+                        "status": "resolved",
+                        "priority": null,
+                        "source": "citizen",
+                        "reported_at": "2026-03-31T23:17:27.898Z",
+                        "updated_at": "2026-04-02T07:10:12.882Z",
+                        "assigned_to": "aeadf7a1-2beb-49b4-b740-d137db354cac",
+                        "image_url": "https://res.cloudinary.com/dxcfokog3/image/upload/v1774999047/issues/zfepltlv9kreu3oxyqxp.jpg",
+                        "severity": null,
+                        "latitude": 9.03,
+                        "longitude": 38.7578,
+                        "votes": 1,
+                        "assigned_by": "ed4a278a-4337-4846-a733-d3b9ea5fd366",
+                        "assigned_at": "2026-04-02T07:00:12.278Z",
+                        "woreda_id": null,
+                        "zone_id": null,
+                        "region_id": null,
+                        "region_name": "Addis Abeba",
+                        "zone_name": "Addis Abeba",
+                        "woreda_name": "Arada",
+                        "reporter_name": "Abenezer Seleshi Abdisa"
+                      }
+                    ],
+                    "total": 4,
+                    "page": 1,
+                    "limit": 20
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Admin unit not assigned or invalid role",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": false,
+                    "message": "No admin unit assigned to this account"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal server error",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": false,
+                    "error": "Database error or unexpected exception"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/issues/{id}/assign": {
+        "post": {
+          "summary": "Assign technician to issue",
+          "tags": [
+            "Admin"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "fd41f2e4-4707-435b-bf32-8345cad3c835"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "technicianId"
+                  ],
+                  "properties": {
+                    "technicianId": {
+                      "type": "string",
+                      "example": "aeadf7a1-2beb-49b4-b740-d137db354cac"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Technician assigned successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Technician assigned",
+                    "data": {
+                      "id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                      "title": "Broken street light",
+                      "description": "Street light has been broken for a week days",
+                      "category": "electricity",
+                      "address": "Bole",
+                      "status": "assigned",
+                      "assigned_to": "aeadf7a1-2beb-49b4-b740-d137db354cac",
+                      "assigned_by": "ed4a278a-4337-4846-a733-d3b9ea5fd366",
+                      "assigned_at": "2026-04-02T07:00:12.278Z",
+                      "image_url": "https://res.cloudinary.com/your-cloud/image/upload/sample.jpg",
+                      "latitude": 9.03,
+                      "longitude": 38.7578,
+                      "votes": 1
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/technicians": {
+        "get": {
+          "summary": "Get all technicians with workload",
+          "tags": [
+            "Admin"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of technicians",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "aeadf7a1-2beb-49b4-b740-d137db354cac",
+                        "full_name": "Field Officer",
+                        "phone": "+251922222224",
+                        "is_active": true,
+                        "active_assignments": 0
+                      },
+                      {
+                        "id": "c09ef32c-fe0c-476e-b788-a06e8f91d4c0",
+                        "full_name": "Field Officer",
+                        "phone": "+251922222222",
+                        "is_active": true,
+                        "active_assignments": 0
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/admin/create-admin": {
+        "post": {
+          "summary": "Create a new admin with geospatial assignment",
+          "description": "Creates a new admin user and automatically assigns their administrative unit (region, zone, or woreda) based on provided latitude and longitude.\nRole hierarchy enforcement:\n  - federal_admin → can create regional_admin\n  - regional_admin → can create zone_admin\n  - zone_admin → can create city_admin\n  - city_admin → can create woreda_admin\n",
+          "tags": [
+            "Admin"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "full_name",
+                    "phone",
+                    "password",
+                    "role",
+                    "latitude",
+                    "longitude"
+                  ],
+                  "properties": {
+                    "full_name": {
+                      "type": "string",
+                      "example": "Abel Tesfaye"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "example": "+251912345678"
+                    },
+                    "password": {
+                      "type": "string",
+                      "example": "TempPass123"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "regional_admin",
+                        "zone_admin",
+                        "city_admin",
+                        "woreda_admin"
+                      ],
+                      "example": "zone_admin"
+                    },
+                    "latitude": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 9.03
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 38.7578
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Admin created successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Admin created successfully",
+                    "data": {
+                      "id": "8c9a1c52-2f3c-4d7e-bf2a-9d98f0f9c123",
+                      "full_name": "Abel Tesfaye",
+                      "phone": "+251912345678",
+                      "role": "zone_admin",
+                      "admin_unit_id": "zone-uuid",
+                      "latitude": 9.03,
+                      "longitude": 38.7578
+                    }
+                  }
+                }
+              }
+            },
+            "400": {
+              "description": "Validation or geolocation error",
+              "content": {
+                "application/json": {
+                  "examples": {
+                    "validationError": {
+                      "summary": "Input validation failed",
+                      "value": {
+                        "success": false,
+                        "errors": [
+                          {
+                            "msg": "Latitude is required",
+                            "param": "latitude",
+                            "location": "body"
+                          }
+                        ]
+                      }
+                    },
+                    "locationError": {
+                      "summary": "Could not resolve location",
+                      "value": {
+                        "success": false,
+                        "message": "Unable to resolve administrative location"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "Unauthorized role creation",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": false,
+                    "message": "You are not authorized to create this role"
+                  }
+                }
+              }
+            },
+            "500": {
+              "description": "Internal server error",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": false,
+                    "message": "Internal server error"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/signup": {
+        "post": {
+          "summary": "Register a new citizen",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "phone": "+251912345678",
+                  "email": "user@example.com",
+                  "password": "StrongPass123",
+                  "full_name": "Abel Tesfaye"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "OTP sent",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "OTP sent to phone"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/verify-signup": {
+        "post": {
+          "summary": "Verify OTP and activate account",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "phone": "+251912345678",
+                  "code": "123456"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Account verified",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Account verified successfully"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/login": {
+        "post": {
+          "summary": "Login user",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "phone",
+                    "password"
+                  ],
+                  "properties": {
+                    "phone": {
+                      "type": "string",
+                      "example": "+251912345678"
+                    },
+                    "password": {
+                      "type": "string",
+                      "example": "StrongPass123"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Login successful",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "accessToken": {
+                        "type": "string",
+                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      },
+                      "refreshToken": {
+                        "type": "string",
+                        "example": "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4="
+                      },
+                      "user": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "example": "cee5c2e5-130c-4e20-b22d-6a5fb8a240aa"
+                          },
+                          "phone": {
+                            "type": "string",
+                            "example": "+251991343124"
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "abenezer@test.com"
+                          },
+                          "full_name": {
+                            "type": "string",
+                            "example": "Abenezer Seleshi Abdisa"
+                          },
+                          "role": {
+                            "type": "string",
+                            "example": "citizen"
+                          },
+                          "language": {
+                            "type": "string",
+                            "example": "en"
+                          },
+                          "admin_unit_id": {
+                            "type": "string",
+                            "nullable": true,
+                            "example": null
+                          },
+                          "is_verified": {
+                            "type": "boolean",
+                            "example": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/refresh": {
+        "post": {
+          "summary": "Refresh access token",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "refreshToken": "your-refresh-token"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "New Access Token",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "success": {
+                        "type": "boolean",
+                        "example": true
+                      },
+                      "accessToken": {
+                        "type": "string",
+                        "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      },
+                      "refreshToken": {
+                        "type": "string",
+                        "example": "dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4="
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/logout": {
+        "post": {
+          "summary": "Logout user",
+          "tags": [
+            "Auth"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Logged out successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Logged out successfully"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/forgot-password": {
+        "post": {
+          "summary": "Send password reset OTP",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "phone": "+251912345678"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "OTP sent",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Password reset OTP sent"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/reset-password": {
+        "post": {
+          "summary": "Reset password with OTP",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "phone": "+251912345678",
+                  "code": "123456",
+                  "new_password": "NewStrongPass123"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Password reset successful",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Password reset successful"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/change-password": {
+        "post": {
+          "summary": "Change password",
+          "tags": [
+            "Auth"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "current_password": "OldPass123",
+                  "new_password": "NewStrongPass123"
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Password changed",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Password changed successfully"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/auth/signup-admin": {
+        "post": {
+          "summary": "Create admin account",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "phone": "+251911111111",
+                  "full_name": "Admin User",
+                  "password": "AdminPass123",
+                  "admin_unit_id": "unit123"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Admin created"
+            }
+          }
+        }
+      },
+      "/api/auth/signup-employee": {
+        "post": {
+          "summary": "Create employee account",
+          "tags": [
+            "Auth"
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "phone": "+251922222222",
+                  "full_name": "Employee User",
+                  "password": "EmployeePass123",
+                  "admin_unit_id": "unit123"
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Employee created"
+            }
+          }
+        }
+      },
+      "/api/issues": {
+        "post": {
+          "summary": "Create a new issue (with optional image upload)",
+          "tags": [
+            "Issues"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "title",
+                    "description",
+                    "category",
+                    "latitude",
+                    "longitude",
+                    "address"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "example": "Broken street light"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Street light not working for 3 days"
+                    },
+                    "category": {
+                      "type": "string",
+                      "example": "electricity"
+                    },
+                    "latitude": {
+                      "type": "number",
+                      "example": 9.03
+                    },
+                    "longitude": {
+                      "type": "number",
+                      "example": 38.7578
+                    },
+                    "address": {
+                      "type": "string",
+                      "example": "Bole"
+                    },
+                    "image": {
+                      "type": "string",
+                      "format": "binary",
+                      "description": "Image file (jpg, png, etc.)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Issue created successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Issue reported successfully",
+                    "data": {
+                      "id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                      "title": "Broken street light",
+                      "description": "Street light has been broken for a week days",
+                      "category": "electricity",
+                      "address": "Bole",
+                      "status": "reported",
+                      "image_url": "https://res.cloudinary.com/your-cloud/image/upload/sample.jpg",
+                      "latitude": 9.03,
+                      "longitude": 38.7578,
+                      "votes": 0,
+                      "assigned_by": null,
+                      "assigned_at": null,
+                      "woreda_id": null,
+                      "zone_id": null,
+                      "region_id": null,
+                      "region_name": "Addis Abeba",
+                      "zone_name": "Addis Abeba",
+                      "woreda_name": "Arada",
+                      "media": []
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/issues/my-issues": {
+        "get": {
+          "summary": "Get issues reported by current user",
+          "tags": [
+            "Issues"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of user issues",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                        "issue_number": null,
+                        "title": "Broken street light",
+                        "description": "Street light has been broken for a week days",
+                        "category": "electricity",
+                        "address": "Bole",
+                        "reporter_id": "cee5c2e5-130c-4e20-b22d-6a5fb8a240aa",
+                        "status": "reported",
+                        "priority": null,
+                        "source": "citizen",
+                        "reported_at": "2026-03-31T23:17:27.898Z",
+                        "updated_at": "2026-03-31T23:17:27.898Z",
+                        "assigned_to": null,
+                        "image_url": "https://res.cloudinary.com/example.jpg",
+                        "severity": null,
+                        "latitude": 9.03,
+                        "longitude": 38.7578,
+                        "votes": 0,
+                        "assigned_by": null,
+                        "assigned_at": null,
+                        "woreda_id": null,
+                        "zone_id": null,
+                        "region_id": null,
+                        "region_name": "Addis Abeba",
+                        "zone_name": "Addis Abeba",
+                        "woreda_name": "Arada"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/issues/search": {
+        "get": {
+          "summary": "Search and filter issues",
+          "tags": [
+            "Issues"
+          ],
+          "parameters": [
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "example": "pending"
+              }
+            },
+            {
+              "in": "query",
+              "name": "category",
+              "schema": {
+                "type": "string",
+                "example": "infrastructure"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Filtered issues",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "page": 1,
+                    "totalPages": 3,
+                    "data": [
+                      {
+                        "id": "650abc12345",
+                        "title": "Broken road"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/issues/{id}": {
+        "get": {
+          "summary": "Get issue by ID",
+          "tags": [
+            "Issues"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "fd41f2e4-4707-435b-bf32-8345cad3c835"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Issue details",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                      "issue_number": null,
+                      "title": "Broken street light",
+                      "description": "Street light has been broken for a week days",
+                      "category": "electricity",
+                      "address": "Bole",
+                      "reporter_id": "cee5c2e5-130c-4e20-b22d-6a5fb8a240aa",
+                      "status": "reported",
+                      "priority": null,
+                      "source": "citizen",
+                      "reported_at": "2026-03-31T23:17:27.898Z",
+                      "updated_at": "2026-03-31T23:17:27.898Z",
+                      "assigned_to": null,
+                      "image_url": "https://res.cloudinary.com/example.jpg",
+                      "severity": null,
+                      "latitude": 9.03,
+                      "longitude": 38.7578,
+                      "votes": 0,
+                      "assigned_by": null,
+                      "assigned_at": null,
+                      "woreda_id": null,
+                      "zone_id": null,
+                      "region_id": null,
+                      "region_name": "Addis Abeba",
+                      "zone_name": "Addis Abeba",
+                      "woreda_name": "Arada"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/issues/{id}/vote": {
+        "post": {
+          "summary": "Vote or unvote an issue",
+          "tags": [
+            "Issues"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "example": "650abc12345"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Vote updated",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "message": "Voted successfully",
+                    "votes": 12
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/technician/tasks": {
+        "get": {
+          "summary": "Get all assigned tasks",
+          "tags": [
+            "Technician"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of assigned tasks",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "6db2936e-4208-4d87-9d55-a6045aa8b815",
+                        "status": "completed",
+                        "deadline": null,
+                        "created_at": "2026-03-21T23:26:57.624Z",
+                        "issue_id": "20b13192-cb15-4da8-9337-a076b079ef81",
+                        "issue_number": null,
+                        "title": "Broken street light",
+                        "category": "electricity",
+                        "description": "Street light has been out for 2 days",
+                        "address": "Bole subcity, Addis Ababa",
+                        "severity": null,
+                        "issue_priority": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/technician/tasks/unfinished": {
+        "get": {
+          "summary": "Get unfinished tasks",
+          "tags": [
+            "Technician"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of unfinished tasks",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab",
+                        "status": "pending",
+                        "deadline": null,
+                        "created_at": "2026-04-02T07:00:12.278Z",
+                        "issue_number": null,
+                        "title": "Broken street light",
+                        "category": "electricity",
+                        "address": "Bole",
+                        "issue_priority": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/technician/tasks/finished": {
+        "get": {
+          "summary": "Get completed tasks",
+          "tags": [
+            "Technician"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "List of completed tasks",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": [
+                      {
+                        "id": "6db2936e-4208-4d87-9d55-a6045aa8b815",
+                        "status": "completed",
+                        "completed_at": "2026-03-26T00:12:24.799Z",
+                        "issue_number": null,
+                        "title": "Broken street light",
+                        "category": "electricity",
+                        "address": "Bole subcity, Addis Ababa",
+                        "issue_priority": null
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/technician/tasks/{id}/accept": {
+        "post": {
+          "summary": "Accept a task",
+          "tags": [
+            "Technician"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Task accepted successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab",
+                      "issue_id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                      "technician_id": "aeadf7a1-2beb-49b4-b740-d137db354cac",
+                      "assigned_by": "ed4a278a-4337-4846-a733-d3b9ea5fd366",
+                      "status": "accepted",
+                      "deadline": null,
+                      "created_at": "2026-04-02T07:00:12.278Z",
+                      "updated_at": "2026-04-02T07:00:12.278Z",
+                      "accepted_at": "2026-04-02T07:07:19.356Z",
+                      "started_at": null,
+                      "completed_at": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/technician/tasks/{id}/start": {
+        "post": {
+          "summary": "Start a task",
+          "tags": [
+            "Technician"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Task started successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab",
+                      "issue_id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                      "technician_id": "aeadf7a1-2beb-49b4-b740-d137db354cac",
+                      "assigned_by": "ed4a278a-4337-4846-a733-d3b9ea5fd366",
+                      "status": "in_progress",
+                      "deadline": null,
+                      "created_at": "2026-04-02T07:00:12.278Z",
+                      "updated_at": "2026-04-02T07:00:12.278Z",
+                      "accepted_at": "2026-04-02T07:07:19.356Z",
+                      "started_at": "2026-04-02T07:09:34.572Z",
+                      "completed_at": null
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/technician/tasks/{id}/complete": {
+        "post": {
+          "summary": "Complete a task",
+          "tags": [
+            "Technician"
+          ],
+          "security": [
+            {
+              "bearerAuth": []
+            }
+          ],
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "example": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Task completed successfully",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "success": true,
+                    "data": {
+                      "id": "62b47aae-6fa0-4d8a-a8d4-da496dcc28ab",
+                      "issue_id": "fd41f2e4-4707-435b-bf32-8345cad3c835",
+                      "technician_id": "aeadf7a1-2beb-49b4-b740-d137db354cac",
+                      "assigned_by": "ed4a278a-4337-4846-a733-d3b9ea5fd366",
+                      "status": "completed",
+                      "deadline": null,
+                      "created_at": "2026-04-02T07:00:12.278Z",
+                      "updated_at": "2026-04-02T07:00:12.278Z",
+                      "accepted_at": "2026-04-02T07:07:19.356Z",
+                      "started_at": "2026-04-02T07:09:34.572Z",
+                      "completed_at": "2026-04-02T07:10:12.879Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {},
+    "tags": []
+  },
+  "customOptions": {}
+}

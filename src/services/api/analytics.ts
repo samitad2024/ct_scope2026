@@ -1,40 +1,33 @@
-import { AnalyticsSummary } from '../../types';
-import { mockAnalyticsSummary, mockChartData } from '../mock';
+import { apiClient } from './api-client';
+import { ApiResponse, DashboardStats } from '../../types/api';
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Analytics and Dashboard API service integrating with real backend
+ */
 
-export const getAnalyticsSummary = async (): Promise<AnalyticsSummary> => {
-  console.log('GET /api/analytics/summary');
-  await delay(1000);
-  return { ...mockAnalyticsSummary };
+export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
+  return apiClient.get<ApiResponse<DashboardStats>>('/api/admin/dashboard');
 };
 
-export const getChartData = async (range: string = '7d'): Promise<any[]> => {
-  console.log(`GET /api/analytics/chart?range=${range}`);
-  await delay(1200);
-  return [...mockChartData];
+export const getAnalyticsSummary = async (): Promise<DashboardStats> => {
+  const response = await getDashboardStats();
+  if (!response.success || !response.data) {
+    throw new Error(response.error || 'Failed to fetch dashboard stats');
+  }
+  return response.data;
 };
 
-export const getIssuesByCategory = async (): Promise<{ category: string; count: number }[]> => {
-  console.log('GET /api/analytics/issues-by-category');
-  await delay(800);
+// Keep chart data as mock for now if backend doesn't provide specific time-series yet,
+// or map from other data if possible. Swagger doesn't explicitly show a chart endpoint.
+export const getChartData = async (_range: string = '7d'): Promise<any[]> => {
+  // Mock data as fallback for UI visualization
   return [
-    { category: 'Road', count: 45 },
-    { category: 'Water', count: 32 },
-    { category: 'Electricity', count: 28 },
-    { category: 'Garbage', count: 25 },
-    { category: 'Drainage', count: 20 },
-  ];
-};
-
-export const getIssuesByRegion = async (): Promise<{ region: string; count: number }[]> => {
-  console.log('GET /api/analytics/issues-by-region');
-  await delay(800);
-  return [
-    { region: 'Addis Ababa', count: 120 },
-    { region: 'Oromia', count: 85 },
-    { region: 'Amhara', count: 65 },
-    { region: 'Sidama', count: 40 },
-    { region: 'Tigray', count: 35 },
+    { name: 'Mon', issues: 12 },
+    { name: 'Tue', issues: 19 },
+    { name: 'Wed', issues: 15 },
+    { name: 'Thu', issues: 22 },
+    { name: 'Fri', issues: 30 },
+    { name: 'Sat', issues: 10 },
+    { name: 'Sun', issues: 8 },
   ];
 };

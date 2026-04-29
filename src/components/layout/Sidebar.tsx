@@ -13,7 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Bell
+  Bell,
+  ClipboardCheck
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useUIStore } from '../../hooks/useUI';
@@ -28,6 +29,7 @@ const navItems = [
   { icon: MapIcon, label: 'Map', path: '/map' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Cpu, label: 'IoT Monitoring', path: '/sensors' },
+  { icon: ClipboardCheck, label: 'My Tasks', path: '/tasks' },
   { icon: Bell, label: 'Notifications', path: '/notifications' },
   { icon: Users, label: 'Users', path: '/users' },
   { icon: FileText, label: 'Reports', path: '/reports' },

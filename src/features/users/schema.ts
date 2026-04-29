@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const userSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  role: z.enum(['federal_admin', 'regional_admin', 'zone_admin', 'woreda_admin', 'technician']),
+  role: z.enum(['federal_admin', 'regional_admin', 'zone_admin', 'city_admin', 'woreda_admin', 'technician']),
   region: z.string().optional(),
   zone: z.string().optional(),
   woreda: z.string().optional(),
@@ -14,4 +14,14 @@ export const userSchema = z.object({
   longitude: z.coerce.number().default(38.7578),
 });
 
+export const createAdminSchema = z.object({
+  name: z.string().min(2, 'Full name must be at least 2 characters'),
+  phone_number: z.string().min(9, 'Phone number must be at least 9 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.enum(['regional_admin', 'zone_admin', 'city_admin', 'woreda_admin']),
+  latitude: z.coerce.number(),
+  longitude: z.coerce.number(),
+});
+
 export type UserFormData = z.infer<typeof userSchema>;
+export type CreateAdminFormData = z.infer<typeof createAdminSchema>;

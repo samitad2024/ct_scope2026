@@ -10,8 +10,10 @@ import {
   CheckCircle2,
   AlertCircle,
   MapPin,
-  User,
-  ArrowUpRight
+  User as UserIcon,
+  ArrowUpRight,
+  Check,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -49,17 +51,31 @@ import {
   SheetTrigger,
   SheetFooter,
 } from '../ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "../ui/dialog";
 import { Separator } from '../ui/separator';
 import { ScrollArea } from '../ui/scroll-area';
+import { Avatar, AvatarFallback } from '../ui/avatar';
 import { Link } from 'react-router-dom';
-import { useIssues } from '../../features/issues/hooks';
+import { useIssues, useAssignIssue } from '../../features/issues/hooks';
+import { useUsers } from '../../features/users/hooks';
 import { Skeleton } from '../ui/skeleton';
 import { Issue } from '../../types/api';
+import { toast } from 'sonner';
 
 export default function IssueManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedTechnicianId, setSelectedTechnicianId] = useState<string | null>(null);
 
   const { data, isLoading } = useIssues({
     status: statusFilter === 'ALL' ? undefined : statusFilter,
@@ -67,7 +83,27 @@ export default function IssueManagement() {
     limit: 50
   });
 
+  const { data: technicians = [], isLoading: techsLoading } = useUsers();
+  const assignMutation = useAssignIssue();
+
   const issues = data?.issues ?? [];
+
+  const handleAssign = async () => {
+    if (!selectedTechnicianId || !selectedIssue) return;
+
+    try {
+      await assignMutation.mutateAsync({ 
+        issueId: selectedIssue.id, 
+        technicianId: selectedTechnicianId 
+      });
+      toast.success('Technician assigned successfully');
+      setIsAssignModalOpen(false);
+      // Update selected issue locally to reflect change in sheet if needed, 
+      // but query invalidation should handle it on refocus/next open
+    } catch (err) {
+      toast.error('Failed to assign technician');
+    }
+  };
 
   const filteredIssues = issues.filter((issue) => {
     const matchesSearch = issue.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -145,6 +181,7 @@ export default function IssueManagement() {
               <TableHead className="w-[100px]">ID</TableHead>
               <TableHead>Issue Details</TableHead>
               <TableHead>Category</TableHead>
+              <TableHead>Assigned To</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Votes</TableHead>
               <TableHead>Created</TableHead>
@@ -178,6 +215,18 @@ export default function IssueManagement() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">{issue.category}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {issue.assigned_technician ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-[8px]">{issue.assigned_technician.full_name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs font-medium truncate max-w-[100px]">{issue.assigned_technician.full_name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Unassigned</span>
+                    )}
                   </TableCell>
                   <TableCell>{getStatusBadge(issue.status)}</TableCell>
                   <TableCell className="text-xs font-medium">{issue.votes}</TableCell>
@@ -247,7 +296,7 @@ export default function IssueManagement() {
 
                                   <div className="space-y-2">
                                     <h4 className="text-sm font-semibold flex items-center gap-2">
-                                      <User className="h-4 w-4" /> Reporter
+                                      <UserIcon className="h-4 w-4" /> Reporter
                                     </h4>
                                     <div className="flex items-center gap-3 rounded-lg border p-3">
                                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
@@ -259,10 +308,20 @@ export default function IssueManagement() {
                                     </div>
                                   </div>
 
-                                  {selectedIssue.image_url && (
+                                  {selectedIssue.assigned_technician && (
                                     <div className="space-y-2">
-                                      <h4 className="text-sm font-semibold">Evidence</h4>
-                                      <img src={selectedIssue.image_url} alt="Evidence" className="rounded-lg object-cover w-full h-auto border shadow-sm" />
+                                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                                        <CheckCircle2 className="h-4 w-4 text-green-500" /> Assigned Personnel
+                                      </h4>
+                                      <div className="flex items-center gap-3 rounded-lg border p-3 bg-green-50/50">
+                                        <Avatar className="h-8 w-8">
+                                          <AvatarFallback>{selectedIssue.assigned_technician.full_name?.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1">
+                                          <p className="text-sm font-medium">{selectedIssue.assigned_technician.full_name}</p>
+                                          <p className="text-xs text-muted-foreground">{selectedIssue.assigned_technician.phone}</p>
+                                        </div>
+                                      </div>
                                     </div>
                                   )}
                                 </div>
@@ -272,7 +331,54 @@ export default function IssueManagement() {
                                 <Button variant="outline" className="flex-1" asChild>
                                   <Link to={`/issues/${selectedIssue.id}`}>Full Details</Link>
                                 </Button>
-                                <Button className="flex-1">Assign Technician</Button>
+                                
+                                <Dialog open={isAssignModalOpen} onOpenChange={setIsAssignModalOpen}>
+                                  <DialogTrigger asChild>
+                                    <Button className="flex-1" disabled={!!selectedIssue.assigned_to}>
+                                      {selectedIssue.assigned_to ? 'Already Assigned' : 'Assign Technician'}
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>Assign Technician</DialogTitle>
+                                      <DialogDescription>
+                                        Select a technician to handle this infrastructure issue.
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="max-h-[300px] overflow-y-auto space-y-2 py-4">
+                                      {techsLoading ? (
+                                        <div className="flex justify-center p-4"><Loader2 className="animate-spin h-6 w-6" /></div>
+                                      ) : technicians.map((tech) => (
+                                        <div 
+                                          key={tech.id}
+                                          onClick={() => setSelectedTechnicianId(tech.id)}
+                                          className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors ${selectedTechnicianId === tech.id ? 'border-primary bg-primary/5' : ''}`}
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <Avatar className="h-8 w-8">
+                                              <AvatarFallback>{tech.full_name.charAt(0)}</AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <p className="text-sm font-medium">{tech.full_name}</p>
+                                              <p className="text-xs text-muted-foreground">{tech.phone}</p>
+                                            </div>
+                                          </div>
+                                          {selectedTechnicianId === tech.id && <Check className="h-4 w-4 text-primary" />}
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <DialogFooter>
+                                      <Button variant="outline" onClick={() => setIsAssignModalOpen(false)}>Cancel</Button>
+                                      <Button 
+                                        onClick={handleAssign} 
+                                        disabled={!selectedTechnicianId || assignMutation.isPending}
+                                      >
+                                        {assignMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Confirm Assignment
+                                      </Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
                               </SheetFooter>
                             </div>
                           )}
